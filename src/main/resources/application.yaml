@@ -1,0 +1,28 @@
+jwt:
+  secret: f9f918b36f273b2ec94e7ac4395a699fecc5ef29142196cef66b46e604f6404b
+  expiration: 86400000
+
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: 1234
+    url: jdbc:postgresql://localhost:5432/iseem
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+
+logging:
+  level:
+    com.iseem_backend: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.apache.poi: DEBUG
