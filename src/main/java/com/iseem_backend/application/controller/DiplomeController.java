@@ -6,7 +6,6 @@ import com.iseem_backend.application.enums.TypeDiplome;
 import com.iseem_backend.application.service.DiplomeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;

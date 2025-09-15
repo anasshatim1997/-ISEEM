@@ -25,7 +25,7 @@ public class FormationRequest {
 
     private String description;
 
-    private Integer anneeFormation;
+    private String anneeFormation;
 
     private Boolean estActive;
 

@@ -19,7 +19,7 @@ public class FormationResponse {
     private BigDecimal cout;
     private Set<UUID> enseignantsIds;
     private String description;
-    private Integer anneeFormation;
+    private String anneeFormation;
     private Boolean estActive;
     private ModeFormation modeFormation;
     private String niveauAcces;

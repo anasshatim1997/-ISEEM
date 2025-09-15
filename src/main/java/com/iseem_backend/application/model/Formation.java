@@ -42,7 +42,7 @@ public class Formation {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    private Integer anneeFormation;
+    private String anneeFormation;
 
     private Boolean estActive;
 

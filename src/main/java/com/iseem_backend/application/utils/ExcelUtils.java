@@ -35,14 +35,12 @@ public class ExcelUtils {
     public static byte[] exportDiplomes(List<Diplome> diplomes) throws IOException {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Diplomes");
-
             String[] columns = {
                     "ID", "NomDiplome", "TypeDiplome", "AnneeObtention", "EstValide",
                     "Mention", "DateDelivrance", "SignatureAdmin", "QrCodeUrl", "Commentaire", "ModeRemise"
             };
             Row header = sheet.createRow(0);
             for (int i = 0; i < columns.length; i++) header.createCell(i).setCellValue(columns[i]);
-
             int rowNum = 1;
             for (Diplome d : diplomes) {
                 Row row = sheet.createRow(rowNum++);
@@ -58,7 +56,6 @@ public class ExcelUtils {
                 row.createCell(9).setCellValue(d.getCommentaire() != null ? d.getCommentaire() : "");
                 row.createCell(10).setCellValue(d.getModeRemise() != null ? d.getModeRemise().name() : "");
             }
-
             for (int i = 0; i < columns.length; i++) sheet.autoSizeColumn(i);
             workbook.write(out);
             return out.toByteArray();
@@ -71,7 +68,6 @@ public class ExcelUtils {
             Sheet sheet = workbook.getSheetAt(0);
             Iterator<Row> rows = sheet.iterator();
             if (rows.hasNext()) rows.next();
-
             while (rows.hasNext()) {
                 Row row = rows.next();
                 Diplome d = new Diplome();
@@ -85,7 +81,6 @@ public class ExcelUtils {
                 d.setQrCodeUrl(row.getCell(8) != null ? row.getCell(8).getStringCellValue() : null);
                 d.setCommentaire(row.getCell(9) != null ? row.getCell(9).getStringCellValue() : null);
                 d.setModeRemise(row.getCell(10) != null ? Enum.valueOf(com.iseem_backend.application.enums.ModeRemise.class, row.getCell(10).getStringCellValue()) : null);
-
                 diplomes.add(d);
             }
         }
@@ -95,14 +90,12 @@ public class ExcelUtils {
     public static byte[] exportFormations(List<Formation> formations) throws IOException {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Formations");
-
             Row header = sheet.createRow(0);
             String[] columns = {"ID", "Nom", "Durée", "Coût", "Professeurs", "Description", "Année", "ModeFormation", "NiveauAcces", "CapaciteMax", "EstActive"};
             for (int i = 0; i < columns.length; i++) {
                 Cell cell = header.createCell(i);
                 cell.setCellValue(columns[i]);
             }
-
             int rowNum = 1;
             for (Formation f : formations) {
                 Row row = sheet.createRow(rowNum++);
@@ -112,17 +105,13 @@ public class ExcelUtils {
                 row.createCell(3).setCellValue(f.getCout() != null ? f.getCout().doubleValue() : 0);
                 row.createCell(4).setCellValue(f.getNomProfesseurs());
                 row.createCell(5).setCellValue(f.getDescription() != null ? f.getDescription() : "");
-                row.createCell(6).setCellValue(f.getAnneeFormation() != null ? f.getAnneeFormation() : 0);
+                row.createCell(6).setCellValue(f.getAnneeFormation() != null ? f.getAnneeFormation() : "");
                 row.createCell(7).setCellValue(f.getModeFormation() != null ? f.getModeFormation().name() : "");
                 row.createCell(8).setCellValue(f.getNiveauAcces() != null ? f.getNiveauAcces() : "");
                 row.createCell(9).setCellValue(f.getCapaciteMax() != null ? f.getCapaciteMax() : 0);
                 row.createCell(10).setCellValue(f.getEstActive() != null ? f.getEstActive() : false);
             }
-
-            for (int i = 0; i < columns.length; i++) {
-                sheet.autoSizeColumn(i);
-            }
-
+            for (int i = 0; i < columns.length; i++) sheet.autoSizeColumn(i);
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                 workbook.write(out);
                 return out.toByteArray();
@@ -136,7 +125,6 @@ public class ExcelUtils {
             Sheet sheet = workbook.getSheetAt(0);
             Iterator<Row> rows = sheet.iterator();
             if (rows.hasNext()) rows.next();
-
             while (rows.hasNext()) {
                 Row row = rows.next();
                 Formation f = new Formation();
@@ -144,7 +132,7 @@ public class ExcelUtils {
                 f.setDuree((int) row.getCell(2).getNumericCellValue());
                 f.setCout(BigDecimal.valueOf(row.getCell(3).getNumericCellValue()));
                 f.setDescription(row.getCell(5) != null ? row.getCell(5).getStringCellValue() : null);
-                f.setAnneeFormation((int) row.getCell(6).getNumericCellValue());
+                f.setAnneeFormation(row.getCell(6) != null ? row.getCell(6).getStringCellValue() : null);
                 f.setModeFormation(Enum.valueOf(com.iseem_backend.application.enums.ModeFormation.class, row.getCell(7).getStringCellValue()));
                 f.setNiveauAcces(row.getCell(8) != null ? row.getCell(8).getStringCellValue() : null);
                 f.setCapaciteMax((int) row.getCell(9).getNumericCellValue());
