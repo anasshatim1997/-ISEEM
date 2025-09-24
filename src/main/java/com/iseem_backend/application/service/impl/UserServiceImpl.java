@@ -1,8 +1,8 @@
 package com.iseem_backend.application.service.impl;
 
 import com.iseem_backend.application.DTO.request.UserRequest;
+import com.iseem_backend.application.DTO.request.UserUpdateRequest;
 import com.iseem_backend.application.DTO.response.UserResponse;
-import com.iseem_backend.application.DTO.response.UserUpdateRequest;
 import com.iseem_backend.application.enums.Role;
 import com.iseem_backend.application.exceptions.UserAlreadyExistsException;
 import com.iseem_backend.application.exceptions.UserNotFoundException;

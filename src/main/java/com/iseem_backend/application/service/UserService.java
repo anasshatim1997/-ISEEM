@@ -1,8 +1,8 @@
 package com.iseem_backend.application.service;
 
 import com.iseem_backend.application.DTO.request.UserRequest;
+import com.iseem_backend.application.DTO.request.UserUpdateRequest;
 import com.iseem_backend.application.DTO.response.UserResponse;
-import com.iseem_backend.application.DTO.response.UserUpdateRequest;
 import com.iseem_backend.application.model.User;
 
 import java.util.List;

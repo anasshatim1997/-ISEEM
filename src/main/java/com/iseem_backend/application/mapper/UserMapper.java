@@ -1,8 +1,8 @@
 package com.iseem_backend.application.mapper;
 
 import com.iseem_backend.application.DTO.request.UserRequest;
+import com.iseem_backend.application.DTO.request.UserUpdateRequest;
 import com.iseem_backend.application.DTO.response.UserResponse;
-import com.iseem_backend.application.DTO.response.UserUpdateRequest;
 import com.iseem_backend.application.model.User;
 import org.springframework.stereotype.Component;
 
@@ -34,21 +34,25 @@ public class UserMapper {
     }
 
 
-    public void updateUserFromDto(UserUpdateRequest request, User user) {
-        if (request == null || user == null) return;
+   public void updateUserFromDto(UserUpdateRequest request, User user) {
+    if (request == null || user == null) return;
 
-        User.builder()
-                .userId(user.getUserId())
-                .email(request.getEmail())
-                .nom(request.getNom())
-                .prenom(request.getPrenom())
-                .telephone(request.getTelephone())
-                .image(request.getImage())
-                .passwordHash(user.getPasswordHash())
-                .role(user.getRole())
-                .createdAt(user.getCreatedAt())
-                .build();
+    if (request.getEmail() != null) {
+        user.setEmail(request.getEmail());
     }
+    if (request.getNom() != null) {
+        user.setNom(request.getNom());
+    }
+    if (request.getPrenom() != null) {
+        user.setPrenom(request.getPrenom());
+    }
+    if (request.getTelephone() != null) {
+        user.setTelephone(request.getTelephone());
+    }
+    if (request.getImage() != null) {
+        user.setImage(request.getImage());
+    }
+}
 
 }
 

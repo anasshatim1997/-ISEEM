@@ -25,6 +25,18 @@ public class JwtFiltre extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                      FilterChain filterChain) throws ServletException, IOException {
+    // Laisser passer les préflight CORS
+    if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+        filterChain.doFilter(request, response);
+        return;
+    }
+
+    // Laisser passer les endpoints publics (login, register)
+    String path = request.getRequestURI();
+    if (path.startsWith("/api/v1/auth/")) {
+        filterChain.doFilter(request, response);
+        return;
+    }
         final String authorizationHeader = request.getHeader("Authorization");
         String email = null;
         String jwt = null;

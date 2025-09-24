@@ -36,6 +36,8 @@ public class ConfigurationSecurite {
     @Bean
     public SecurityFilterChain chaineFiltrageSecurite(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
+                .cors()
+                .and()
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(
                                 "/swagger-ui.html",
