@@ -95,7 +95,7 @@ public class StudentController {
     }
 
     @Operation(summary = "Exporter les étudiants en fichier Excel")
-    @GetMapping("/export")
+    @GetMapping("/all/export")
     public ResponseEntity<byte[]> exporterEtudiants() {
         byte[] excelData = studentService.exporterEtudiants();
         return ResponseEntity.ok()
