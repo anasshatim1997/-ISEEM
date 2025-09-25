@@ -2,6 +2,7 @@ package com.iseem_backend.application.service.impl;
 
 import com.iseem_backend.application.DTO.request.EnseignantRequest;
 import com.iseem_backend.application.DTO.response.EnseignantResponse;
+import com.iseem_backend.application.enums.StatusEnseignant;
 import com.iseem_backend.application.exceptions.DiplomeNotFoundException;
 import com.iseem_backend.application.exceptions.EnseignantNotFoundException;
 import com.iseem_backend.application.exceptions.ModuleNotFoundException;
@@ -17,10 +18,14 @@ import com.iseem_backend.application.repository.ModuleRepository;
 import com.iseem_backend.application.repository.UserRepository;
 import com.iseem_backend.application.service.EnseignantService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -88,28 +93,116 @@ public class EnseignantServiceImpl implements EnseignantService {
         enseignantRepository.delete(enseignant);
     }
 
+
     @Override
-    @PreAuthorize("hasRole('ADMINISTRATION')")
-    public EnseignantResponse assignerDiplome(UUID enseignantId, UUID diplomeId) {
-        Enseignant enseignant = enseignantRepository.findById(enseignantId)
-                .orElseThrow(() -> new EnseignantNotFoundException(enseignantId));
-        Diplome diplome = diplomeRepository.findById(diplomeId)
-                .orElseThrow(() -> new DiplomeNotFoundException(diplomeId));
-        enseignant.getDiplomes().add(diplome);
-        diplome.getProfesseurs().add(enseignant);
-        diplomeRepository.save(diplome);
-        return enseignantMapper.toDto(enseignantRepository.save(enseignant));
+    @Transactional(readOnly = true)
+    public EnseignantResponse obtenirParId(UUID id) {
+        Enseignant enseignant = enseignantRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Enseignant introuvable"));
+
+        return enseignantMapper.toDto(enseignant);
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMINISTRATION')")
+    @Transactional(readOnly = true)
+    public List<EnseignantResponse> obtenirTous() {
+        List<Enseignant> enseignants = enseignantRepository.findAll();
+        return enseignants.stream()
+                .map(enseignantMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EnseignantResponse> obtenirTousAvecPagination(Pageable pageable) {
+        Page<Enseignant> enseignants = enseignantRepository.findAllWithUser(pageable);
+        return enseignants.map(enseignantMapper::toDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EnseignantResponse> obtenirParSpecialite(String specialite) {
+        List<Enseignant> enseignants = enseignantRepository.findBySpecialiteContainingIgnoreCase(specialite);
+        return enseignants.stream()
+                .map(enseignantMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EnseignantResponse> obtenirParStatut(String statut) {
+        StatusEnseignant status = StatusEnseignant.valueOf(statut.toUpperCase());
+        List<Enseignant> enseignants = enseignantRepository.findByStatusEnseignant(status);
+        return enseignants.stream()
+                .map(enseignantMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public EnseignantResponse assignerDiplome(UUID enseignantId, UUID diplomeId) {
+        Enseignant enseignant = enseignantRepository.findById(enseignantId)
+                .orElseThrow(() -> new RuntimeException("Enseignant introuvable"));
+
+        Diplome diplome = diplomeRepository.findById(diplomeId)
+                .orElseThrow(() -> new RuntimeException("Diplôme introuvable"));
+
+        if (diplome.getProfesseurs().contains(enseignant)) {
+            throw new RuntimeException("Diplôme déjà assigné à cet enseignant");
+        }
+
+        diplome.getProfesseurs().add(enseignant);
+        diplomeRepository.save(diplome);
+
+        return enseignantMapper.toDto(enseignant);
+    }
+
+    @Override
     public EnseignantResponse assignerModule(UUID enseignantId, UUID moduleId) {
         Enseignant enseignant = enseignantRepository.findById(enseignantId)
-                .orElseThrow(() -> new EnseignantNotFoundException(enseignantId));
+                .orElseThrow(() -> new RuntimeException("Enseignant introuvable"));
+
         Module module = moduleRepository.findById(moduleId)
-                .orElseThrow(() -> new ModuleNotFoundException(moduleId));
+                .orElseThrow(() -> new RuntimeException("Module introuvable"));
+
+        if (module.getEnseignant() != null) {
+            throw new RuntimeException("Module déjà assigné à un autre enseignant");
+        }
+
         module.setEnseignant(enseignant);
         moduleRepository.save(module);
+
+        return enseignantMapper.toDto(enseignant);
+    }
+
+    @Override
+    public EnseignantResponse retirerDiplome(UUID enseignantId, UUID diplomeId) {
+        Enseignant enseignant = enseignantRepository.findById(enseignantId)
+                .orElseThrow(() -> new RuntimeException("Enseignant introuvable"));
+
+        Diplome diplome = diplomeRepository.findById(diplomeId)
+                .orElseThrow(() -> new RuntimeException("Diplôme introuvable"));
+
+        diplome.getProfesseurs().remove(enseignant);
+        diplomeRepository.save(diplome);
+
+        return enseignantMapper.toDto(enseignant);
+    }
+
+    @Override
+    public EnseignantResponse retirerModule(UUID enseignantId, UUID moduleId) {
+        Enseignant enseignant = enseignantRepository.findById(enseignantId)
+                .orElseThrow(() -> new RuntimeException("Enseignant introuvable"));
+
+        Module module = moduleRepository.findById(moduleId)
+                .orElseThrow(() -> new RuntimeException("Module introuvable"));
+
+        if (!module.getEnseignant().equals(enseignant)) {
+            throw new RuntimeException("Ce module n'est pas assigné à cet enseignant");
+        }
+
+        module.setEnseignant(null);
+        moduleRepository.save(module);
+
         return enseignantMapper.toDto(enseignant);
     }
 }
