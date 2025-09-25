@@ -147,68 +147,225 @@ public class ExcelUtils {
         List<Student> students = new ArrayList<>();
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
             Sheet sheet = workbook.getSheetAt(0);
-            for (Row row : sheet) {
-                if (row.getRowNum() == 0) continue;
+            int totalRows = sheet.getLastRowNum();
+
+            log.info("Starting import - Total rows in sheet: {}", totalRows);
+
+            Row headerRow = sheet.getRow(0);
+            boolean hasPasswordColumn = false;
+            if (headerRow != null && headerRow.getLastCellNum() >= 18) {
+                String fifthColumnHeader = getCellValueAsString(headerRow.getCell(5));
+                hasPasswordColumn = fifthColumnHeader != null &&
+                        (fifthColumnHeader.equalsIgnoreCase("password") ||
+                                fifthColumnHeader.equalsIgnoreCase("motDePasse") ||
+                                fifthColumnHeader.equalsIgnoreCase("pwd"));
+            }
+
+            log.info("Header row exists: {}, Has password column: {}, Header columns: {}",
+                    headerRow != null, hasPasswordColumn,
+                    headerRow != null ? headerRow.getLastCellNum() : 0);
+
+            if (headerRow != null) {
+                log.info("Header content:");
+                for (int j = 0; j < headerRow.getLastCellNum(); j++) {
+                    Cell cell = headerRow.getCell(j);
+                    log.info("Column {}: '{}'", j, getCellValueAsString(cell));
+                }
+            }
+
+            int processedRows = 0;
+            for (int i = 1; i <= totalRows; i++) {
+                Row row = sheet.getRow(i);
+                log.info("Processing row {}: row exists = {}", i, row != null);
+
+                if (isRowEmpty(row)) {
+                    log.info("Row {} is empty, skipping", i);
+                    continue;
+                }
+
+                processedRows++;
+                log.info("Row {} data:", i);
+                if (row != null) {
+                    for (int j = 0; j < Math.min(18, row.getLastCellNum()); j++) {
+                        Cell cell = row.getCell(j);
+                        log.info("  Cell {}: '{}'", j, getCellValueAsString(cell));
+                    }
+                }
+
                 try {
                     String prenom = getCellValueAsString(row.getCell(0));
                     String nom = getCellValueAsString(row.getCell(1));
                     String matricule = getCellValueAsString(row.getCell(2));
                     String email = getCellValueAsString(row.getCell(3));
                     String telephone = getCellValueAsString(row.getCell(4));
-                    String passwordPlain = getCellValueAsString(row.getCell(5));
-                    String dateNaissanceStr = getCellValueAsString(row.getCell(6));
-                    String lieuNaissance = getCellValueAsString(row.getCell(7));
-                    String sexeStr = getCellValueAsString(row.getCell(8));
-                    String nationalite = getCellValueAsString(row.getCell(9));
-                    String adresse = getCellValueAsString(row.getCell(10));
-                    String ville = getCellValueAsString(row.getCell(11));
-                    String situationFamiliale = getCellValueAsString(row.getCell(12));
-                    String niveauStr = getCellValueAsString(row.getCell(13));
-                    String groupe = getCellValueAsString(row.getCell(14));
-                    String anneeAcademique = getCellValueAsString(row.getCell(15));
-                    String statutStr = getCellValueAsString(row.getCell(16));
-                    String bourseStr = getCellValueAsString(row.getCell(17));
-                    String handicapStr = getCellValueAsString(row.getCell(18));
-                    if (matricule == null || matricule.isEmpty() || nom == null || nom.isEmpty() || prenom == null || prenom.isEmpty() || email == null || email.isEmpty()) continue;
+
+                    log.info("Row {} - Essential fields: prenom='{}', nom='{}', matricule='{}', email='{}'",
+                            i, prenom, nom, matricule, email);
+
+                    String passwordPlain = null;
+                    int dateIndex = 5;
+                    if (hasPasswordColumn) {
+                        passwordPlain = getCellValueAsString(row.getCell(5));
+                        dateIndex = 6;
+                        log.info("Row {} - Password column found: '{}'", i, passwordPlain);
+                    }
+
+                    String dateNaissanceStr = getCellValueAsString(row.getCell(dateIndex));
+                    String lieuNaissance = getCellValueAsString(row.getCell(dateIndex + 1));
+                    String sexeStr = getCellValueAsString(row.getCell(dateIndex + 2));
+                    String nationalite = getCellValueAsString(row.getCell(dateIndex + 3));
+                    String adresse = getCellValueAsString(row.getCell(dateIndex + 4));
+                    String ville = getCellValueAsString(row.getCell(dateIndex + 5));
+                    String situationFamiliale = getCellValueAsString(row.getCell(dateIndex + 6));
+                    String niveauStr = getCellValueAsString(row.getCell(dateIndex + 7));
+                    String groupe = getCellValueAsString(row.getCell(dateIndex + 8));
+                    String anneeAcademique = getCellValueAsString(row.getCell(dateIndex + 9));
+                    String statutStr = getCellValueAsString(row.getCell(dateIndex + 10));
+                    String bourseStr = getCellValueAsString(row.getCell(dateIndex + 11));
+                    String handicapStr = getCellValueAsString(row.getCell(dateIndex + 12));
+
+                    if (isNullOrEmpty(matricule) || isNullOrEmpty(nom) ||
+                            isNullOrEmpty(prenom) || isNullOrEmpty(email)) {
+                        log.warn("Row {} skipped - missing essential fields", i);
+                        continue;
+                    }
+
                     LocalDate dateNaissance = null;
-                    if (dateNaissanceStr != null && !dateNaissanceStr.isEmpty()) {
-                        try { dateNaissance = LocalDate.parse(dateNaissanceStr, DATE_FORMATTER); } catch (DateTimeParseException e) { continue; }
+                    if (!isNullOrEmpty(dateNaissanceStr)) {
+                        try {
+                            dateNaissance = LocalDate.parse(dateNaissanceStr, DATE_FORMATTER);
+                            log.info("Row {} - Date parsed successfully: {}", i, dateNaissance);
+                        } catch (DateTimeParseException e) {
+                            log.error("Row {} - Invalid date format '{}', skipping row", i, dateNaissanceStr);
+                            continue;
+                        }
                     }
+
                     Sex sexe = Sex.male;
-                    if (sexeStr != null && (sexeStr.equalsIgnoreCase("female") || sexeStr.equalsIgnoreCase("F"))) sexe = Sex.female;
+                    if (!isNullOrEmpty(sexeStr) &&
+                            (sexeStr.equalsIgnoreCase("female") || sexeStr.equalsIgnoreCase("F"))) {
+                        sexe = Sex.female;
+                    }
+                    log.info("Row {} - Sex: {}", i, sexe);
+
                     Niveau niveau = null;
-                    if (niveauStr != null && !niveauStr.isEmpty()) {
-                        try { niveau = Niveau.valueOf(niveauStr.trim()); } catch (IllegalArgumentException e) { continue; }
+                    if (!isNullOrEmpty(niveauStr)) {
+                        try {
+                            niveau = Niveau.valueOf(niveauStr.trim());
+                            log.info("Row {} - Niveau parsed: {}", i, niveau);
+                        } catch (IllegalArgumentException e) {
+                            log.error("Row {} - Invalid niveau '{}', skipping row", i, niveauStr);
+                            continue;
+                        }
                     }
+
                     Statut statut = Statut.Actif;
-                    if (statutStr != null && !statutStr.isEmpty()) {
-                        try { statut = Statut.valueOf(statutStr.trim()); } catch (IllegalArgumentException ignored) {}
+                    if (!isNullOrEmpty(statutStr)) {
+                        try {
+                            statut = Statut.valueOf(statutStr.trim());
+                            log.info("Row {} - Statut parsed: {}", i, statut);
+                        } catch (IllegalArgumentException e) {
+                            log.warn("Row {} - Invalid statut '{}', using default Actif", i, statutStr);
+                        }
                     }
+
                     YesOrNo bourse = YesOrNo.No;
-                    if (bourseStr != null && (bourseStr.equalsIgnoreCase("Yes") || bourseStr.equalsIgnoreCase("Oui"))) bourse = YesOrNo.Yes;
+                    if (!isNullOrEmpty(bourseStr) &&
+                            (bourseStr.equalsIgnoreCase("Yes") || bourseStr.equalsIgnoreCase("Oui") ||
+                                    bourseStr.equalsIgnoreCase("Y") || bourseStr.equals("1"))) {
+                        bourse = YesOrNo.Yes;
+                    }
+
                     YesOrNo handicap = YesOrNo.No;
-                    if (handicapStr != null && (handicapStr.equalsIgnoreCase("Yes") || handicapStr.equalsIgnoreCase("Oui"))) handicap = YesOrNo.Yes;
-                    String hashedPassword = PASSWORD_ENCODER.encode(passwordPlain != null && !passwordPlain.isEmpty() ? passwordPlain : matricule);
-                    User user = User.builder().email(email.trim()).passwordHash(hashedPassword).role(Role.ETUDIANT).nom(nom.trim()).prenom(prenom.trim()).telephone(telephone != null ? telephone.trim() : "").image(null).build();
-                    Student student = Student.builder().user(user).matricule(matricule.trim()).dateNaissance(dateNaissance).lieuNaissance(lieuNaissance != null ? lieuNaissance.trim() : null).sexe(sexe).nationalite(nationalite != null ? nationalite.trim() : "Unknown").adresse(adresse != null ? adresse.trim() : null).ville(ville != null ? ville.trim() : "Unknown").situationFamiliale(situationFamiliale != null ? situationFamiliale.trim() : "Single").niveau(niveau).groupe(groupe != null ? groupe.trim() : "A").anneeAcademique(anneeAcademique != null ? anneeAcademique.trim() : null).statut(statut).bourse(bourse).handicap(handicap).build();
+                    if (!isNullOrEmpty(handicapStr) &&
+                            (handicapStr.equalsIgnoreCase("Yes") || handicapStr.equalsIgnoreCase("Oui") ||
+                                    handicapStr.equalsIgnoreCase("Y") || handicapStr.equals("1"))) {
+                        handicap = YesOrNo.Yes;
+                    }
+
+                    String passwordToUse = isNullOrEmpty(passwordPlain) ? matricule.trim() : passwordPlain.trim();
+                    String hashedPassword = PASSWORD_ENCODER.encode(passwordToUse);
+                    log.info("Row {} - Password will be: {}", i, passwordToUse);
+
+                    User user = User.builder()
+                            .email(email.trim())
+                            .passwordHash(hashedPassword)
+                            .role(Role.ETUDIANT)
+                            .nom(nom.trim())
+                            .prenom(prenom.trim())
+                            .telephone(telephone != null ? telephone.trim() : "")
+                            .image(null)
+                            .build();
+
+                    Student student = Student.builder()
+                            .user(user)
+                            .matricule(matricule.trim())
+                            .dateNaissance(dateNaissance)
+                            .lieuNaissance(lieuNaissance != null ? lieuNaissance.trim() : null)
+                            .sexe(sexe)
+                            .nationalite(nationalite != null ? nationalite.trim() : "Unknown")
+                            .adresse(adresse != null ? adresse.trim() : null)
+                            .ville(ville != null ? ville.trim() : "Unknown")
+                            .situationFamiliale(situationFamiliale != null ? situationFamiliale.trim() : "Single")
+                            .niveau(niveau)
+                            .groupe(groupe != null ? groupe.trim() : "A")
+                            .anneeAcademique(anneeAcademique != null ? anneeAcademique.trim() : null)
+                            .statut(statut)
+                            .bourse(bourse)
+                            .handicap(handicap)
+                            .build();
+
                     students.add(student);
-                } catch (Exception e) { log.error("Error importing students from Excel file", e); }
+                    log.info("Row {} - Student successfully created: {} {}", i, prenom, nom);
+                } catch (Exception e) {
+                    log.error("Error importing student from row {}: {}", i, e.getMessage(), e);
+                }
             }
-        } catch (Exception ex) { throw new RuntimeException("Failed to import Excel file", ex); }
+
+            log.info("Import completed - Processed rows: {}, Successful imports: {}", processedRows, students.size());
+        } catch (Exception ex) {
+            log.error("Failed to import Excel file", ex);
+            throw new RuntimeException("Failed to import Excel file", ex);
+        }
         return students;
+    }
+
+    private static boolean isRowEmpty(Row row) {
+        if (row == null) return true;
+        for (int c = 0; c < 4; c++) {
+            Cell cell = row.getCell(c);
+            if (cell != null && cell.getCellType() != CellType.BLANK &&
+                    !isNullOrEmpty(getCellValueAsString(cell))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isNullOrEmpty(String str) {
+        return str == null || str.trim().isEmpty();
     }
 
     private static String getCellValueAsString(Cell cell) {
         if (cell == null) return null;
         switch (cell.getCellType()) {
-            case STRING: return cell.getStringCellValue();
+            case STRING:
+                return cell.getStringCellValue().trim();
             case NUMERIC:
-                if (DateUtil.isCellDateFormatted(cell)) return cell.getLocalDateTimeCellValue().toLocalDate().toString();
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    return cell.getLocalDateTimeCellValue().toLocalDate().toString();
+                }
                 double numValue = cell.getNumericCellValue();
-                if (numValue == Math.floor(numValue)) return String.valueOf((long) numValue);
+                if (numValue == Math.floor(numValue)) {
+                    return String.valueOf((long) numValue);
+                }
                 return String.valueOf(numValue);
-            case BOOLEAN: return String.valueOf(cell.getBooleanCellValue());
-            default: return null;
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            case BLANK:
+                return null;
+            default:
+                return null;
         }
     }
 
