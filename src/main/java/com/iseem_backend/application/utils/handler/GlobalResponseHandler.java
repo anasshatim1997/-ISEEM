@@ -1,16 +1,20 @@
 package com.iseem_backend.application.utils.handler;
 
 
-import com.iseem_backend.application.exceptions.DiplomeNotFoundException;
-import com.iseem_backend.application.exceptions.EnseignantNotFoundException;
-import com.iseem_backend.application.exceptions.ModuleNotFoundException;
+import com.iseem_backend.application.exceptions.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.apache.tomcat.util.http.fileupload.FileUploadException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -79,6 +83,138 @@ public class GlobalResponseHandler {
     public ResponseEntity<ApiResponse<String>> handleModuleNotFound(ModuleNotFoundException ex) {
         ApiResponse<String> body = error(ex.getMessage(), HttpStatus.NOT_FOUND.value());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(ModuleAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<String>> handleModuleAlreadyExists(ModuleAlreadyExistsException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.CONFLICT.value());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(ModuleException.class)
+    public ResponseEntity<ApiResponse<String>> handleModuleException(ModuleException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(StudentNotFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handleStudentNotFound(StudentNotFoundException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handleUserNotFound(UserNotFoundException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<String>> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.CONFLICT.value());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(MatriculeAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<String>> handleMatriculeAlreadyExists(MatriculeAlreadyExistsException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.CONFLICT.value());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(NoteNotFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handleNoteNotFound(NoteNotFoundException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(NoteAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<String>> handleNoteAlreadyExists(NoteAlreadyExistsException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.CONFLICT.value());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(UnauthorizedAccessException.class)
+    public ResponseEntity<ApiResponse<String>> handleUnauthorizedAccess(UnauthorizedAccessException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.FORBIDDEN.value());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(FormationNotFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handleFormationNotFound(FormationNotFoundException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(FileUploadException.class)
+    public ResponseEntity<ApiResponse<String>> handleFileUpload(FileUploadException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(InvalidFileFormatException.class)
+    public ResponseEntity<ApiResponse<String>> handleInvalidFileFormat(InvalidFileFormatException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(InvalidGradeException.class)
+    public ResponseEntity<ApiResponse<String>> handleInvalidGrade(InvalidGradeException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(AcademicYearNotFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handleAcademicYearNotFound(AcademicYearNotFoundException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(InsufficientPermissionException.class)
+    public ResponseEntity<ApiResponse<String>> handleInsufficientPermission(InsufficientPermissionException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.FORBIDDEN.value());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<String>> handleBadCredentials(BadCredentialsException ex) {
+        ApiResponse<String> body = error("Invalid email or password", HttpStatus.UNAUTHORIZED.value());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse<String>> handleAuthentication(AuthenticationException ex) {
+        ApiResponse<String> body = error("Authentication failed", HttpStatus.UNAUTHORIZED.value());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<String>> handleAccessDenied(AccessDeniedException ex) {
+        ApiResponse<String> body = error("Access denied", HttpStatus.FORBIDDEN.value());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<String>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        ApiResponse<String> body = error("Data integrity violation - duplicate or invalid data", HttpStatus.CONFLICT.value());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<String>> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        ApiResponse<String> body = error("File size exceeds maximum limit", HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<String>> handleIllegalArgument(IllegalArgumentException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<String>> handleIllegalState(IllegalStateException ex) {
+        ApiResponse<String> body = error(ex.getMessage(), HttpStatus.CONFLICT.value());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(RuntimeException.class)

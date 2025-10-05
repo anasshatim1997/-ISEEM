@@ -21,15 +21,33 @@ public class Module {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID idModule;
 
+    @Column(nullable = false)
+    private String nom;
+
+    @Column(name = "module_name")
     private String moduleName;
 
+    @Column(precision = 3, scale = 1, nullable = false)
+    private BigDecimal coefficient;
+
+    private String description;
+
+    private Integer heuresTotal;
+
+    private Integer heuresCours;
+
+    private Integer heuresTD;
+
+    private Integer heuresTP;
+
+    @Column(precision = 4, scale = 2)
     private BigDecimal note;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_enseignant")
     private Enseignant enseignant;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_diplome")
     private Diplome diplome;
 
@@ -39,4 +57,6 @@ public class Module {
     @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Absence> absences;
 
+    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Note> notes;
 }

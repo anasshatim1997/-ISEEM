@@ -5,6 +5,7 @@ import com.iseem_backend.application.DTO.response.EnseignantResponse;
 import org.springframework.data.domain.Page;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,5 +23,8 @@ public interface EnseignantService {
     EnseignantResponse assignerModule(UUID enseignantId, UUID moduleId);
     EnseignantResponse retirerDiplome(UUID enseignantId, UUID diplomeId);
     EnseignantResponse retirerModule(UUID enseignantId, UUID moduleId);
+    byte[] exporterEnseignantsVersExcel();
+    List<EnseignantResponse> importerEnseignantsDepuisExcel(MultipartFile file);
+
 
 }

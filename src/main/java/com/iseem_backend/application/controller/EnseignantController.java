@@ -11,10 +11,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -158,5 +160,31 @@ public class EnseignantController {
             @Parameter(description = "ID du module") @PathVariable UUID moduleId) {
         EnseignantResponse response = enseignantService.retirerModule(id, moduleId);
         return GlobalResponseHandler.success(response, "Module retiré");
+    }
+
+    @Operation(summary = "Importer enseignants depuis Excel", description = "Importer plusieurs enseignants depuis un fichier Excel")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Enseignants importés avec succès"),
+            @ApiResponse(responseCode = "400", description = "Fichier invalide")
+    })
+    @PostMapping("/import")
+    public ResponseEntity<?> importerDepuisExcel(@Parameter(description = "Fichier Excel") @RequestParam("file") MultipartFile file) {
+        List<EnseignantResponse> responses = enseignantService.importerEnseignantsDepuisExcel(file);
+        return GlobalResponseHandler.success(responses, "Enseignants importés avec succès");
+    }
+
+    @Operation(summary = "Exporter enseignants vers Excel", description = "Exporter tous les enseignants au format Excel")
+    @ApiResponse(responseCode = "200", description = "Export réussi")
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exporterVersExcel() {
+        byte[] excelData = enseignantService.exporterEnseignantsVersExcel();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", "enseignants_export.xlsx");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(excelData);
     }
 }
