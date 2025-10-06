@@ -17,14 +17,17 @@ import com.iseem_backend.application.repository.EnseignantRepository;
 import com.iseem_backend.application.repository.ModuleRepository;
 import com.iseem_backend.application.repository.UserRepository;
 import com.iseem_backend.application.service.EnseignantService;
+import com.iseem_backend.application.utils.ExcelUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import org.springframework.data.domain.Pageable;
-
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -33,6 +36,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class EnseignantServiceImpl implements EnseignantService {
 
     private final EnseignantRepository enseignantRepository;
@@ -75,7 +79,6 @@ public class EnseignantServiceImpl implements EnseignantService {
         return enseignantMapper.toDto(enseignant);
     }
 
-
     @Override
     @PreAuthorize("hasAnyRole('ADMINISTRATION','ENSEIGNANT')")
     public EnseignantResponse modifier(UUID id, EnseignantRequest request) {
@@ -93,13 +96,11 @@ public class EnseignantServiceImpl implements EnseignantService {
         enseignantRepository.delete(enseignant);
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public EnseignantResponse obtenirParId(UUID id) {
         Enseignant enseignant = enseignantRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Enseignant introuvable"));
-
         return enseignantMapper.toDto(enseignant);
     }
 
@@ -204,5 +205,53 @@ public class EnseignantServiceImpl implements EnseignantService {
         moduleRepository.save(module);
 
         return enseignantMapper.toDto(enseignant);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMINISTRATION')")
+    public List<EnseignantResponse> importerEnseignantsDepuisExcel(MultipartFile file) {
+        try {
+            log.info("Starting import from Excel file: {}", file.getOriginalFilename());
+
+            List<Enseignant> enseignants = ExcelUtils.importEnseignants(file);
+
+            for (Enseignant enseignant : enseignants) {
+                if (userRepository.existsByEmail(enseignant.getUser().getEmail())) {
+                    log.warn("Email already exists: {}, skipping", enseignant.getUser().getEmail());
+                    continue;
+                }
+
+                userRepository.save(enseignant.getUser());
+                enseignantRepository.save(enseignant);
+            }
+
+            log.info("Import completed successfully. Imported {} enseignants", enseignants.size());
+
+            return enseignants.stream()
+                    .map(enseignantMapper::toDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error importing enseignants from Excel", e);
+            throw new RuntimeException("Erreur lors de l'importation: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMINISTRATION')")
+    @Transactional(readOnly = true)
+    public byte[] exporterEnseignantsVersExcel() {
+        try {
+            log.info("Starting export to Excel");
+
+            List<Enseignant> enseignants = enseignantRepository.findAll();
+            byte[] excelData = ExcelUtils.exportEnseignants(enseignants);
+
+            log.info("Export completed successfully. Exported {} enseignants", enseignants.size());
+
+            return excelData;
+        } catch (IOException e) {
+            log.error("Error exporting enseignants to Excel", e);
+            throw new RuntimeException("Erreur lors de l'exportation: " + e.getMessage(), e);
+        }
     }
 }
