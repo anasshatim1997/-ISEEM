@@ -15,7 +15,6 @@ import java.util.UUID;
 public class ModuleResponse {
     private UUID idModule;
     private String nom;
-    private String moduleName;
     private BigDecimal coefficient;
     private String description;
     private Integer heuresTotal;

@@ -16,7 +16,6 @@ public class ModuleMapper {
     public Module toEntity(ModuleRequest request, Enseignant enseignant, Diplome diplome) {
         return Module.builder()
                 .nom(request.getNom())
-                .moduleName(request.getModuleName())
                 .coefficient(request.getCoefficient())
                 .description(request.getDescription())
                 .heuresTotal(request.getHeuresTotal())
@@ -32,7 +31,6 @@ public class ModuleMapper {
         return ModuleResponse.builder()
                 .idModule(module.getIdModule())
                 .nom(module.getNom())
-                .moduleName(module.getModuleName())
                 .coefficient(module.getCoefficient())
                 .description(module.getDescription())
                 .heuresTotal(module.getHeuresTotal())
@@ -55,7 +53,6 @@ public class ModuleMapper {
 
     public void updateEntity(Module module, ModuleRequest request, Enseignant enseignant, Diplome diplome) {
         module.setNom(request.getNom());
-        module.setModuleName(request.getModuleName());
         module.setCoefficient(request.getCoefficient());
         module.setDescription(request.getDescription());
         module.setHeuresTotal(request.getHeuresTotal());

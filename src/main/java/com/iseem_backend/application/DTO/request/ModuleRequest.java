@@ -18,7 +18,6 @@ public class ModuleRequest {
     @NotBlank(message = "Le nom du module est obligatoire")
     private String nom;
 
-    private String moduleName;
 
     @NotNull(message = "Le coefficient est obligatoire")
     @DecimalMin(value = "0.5", message = "Le coefficient doit être supérieur à 0.5")

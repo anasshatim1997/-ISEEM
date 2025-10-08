@@ -175,7 +175,7 @@ public class NoteServiceImpl implements NoteService {
 
             NoteModuleResponse moduleResponse = NoteModuleResponse.builder()
                     .moduleId(module.getIdModule())
-                    .moduleNom(module.getModuleName())
+                    .moduleNom(module.getNom())
                     .coefficient(module.getCoefficient())
                     .build();
 
@@ -390,7 +390,7 @@ public class NoteServiceImpl implements NoteService {
                 .studentPrenom(note.getStudent().getUser().getPrenom())
                 .matricule(note.getStudent().getMatricule())
                 .moduleId(note.getModule().getIdModule())
-                .moduleNom(note.getModule().getModuleName())
+                .moduleNom(note.getModule().getNom())
                 .typeNote(note.getTypeNote())
                 .valeur(note.getValeur())
                 .anneeScolaire(note.getAnneeScolaire())

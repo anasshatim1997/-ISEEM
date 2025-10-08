@@ -24,8 +24,7 @@ public class Module {
     @Column(nullable = false)
     private String nom;
 
-    @Column(name = "module_name")
-    private String moduleName;
+  
 
     @Column(precision = 3, scale = 1, nullable = false)
     private BigDecimal coefficient;

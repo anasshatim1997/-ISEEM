@@ -1,8 +1,8 @@
 package com.iseem_backend.application.mapper;
 
 import com.iseem_backend.application.DTO.request.UserRequest;
-import com.iseem_backend.application.DTO.request.UserUpdateRequest;
 import com.iseem_backend.application.DTO.response.UserResponse;
+import com.iseem_backend.application.DTO.response.UserUpdateRequest;
 import com.iseem_backend.application.model.User;
 import org.springframework.stereotype.Component;
 

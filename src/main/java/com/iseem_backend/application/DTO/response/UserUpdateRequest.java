@@ -1,4 +1,4 @@
-package com.iseem_backend.application.DTO.request;
+package com.iseem_backend.application.DTO.response;
 
 
 import io.micrometer.common.lang.Nullable;
